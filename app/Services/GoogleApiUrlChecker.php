@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Services;
 
 
@@ -16,7 +17,8 @@ class GoogleApiUrlChecker implements \App\Services\Interfaces\UrlChecker
     private const SAFE_BROWSING_API_KEY_CONFIG_PATH = "services.google-safe-browsing.apiKey";
 
     public function __construct(private Client $client)
-    {}
+    {
+    }
 
     public function checkUrl(string $url): bool
     {
@@ -38,10 +40,10 @@ class GoogleApiUrlChecker implements \App\Services\Interfaces\UrlChecker
     {
         try {
             return $this->client->get(
-                $url, ['connect_timeout' => 5.00]
+                    $url, ['connect_timeout' => 5.00]
                 )->getStatusCode() == 200;
-        }catch (GuzzleException $e) {
-            Log::info("Failed to call given url: ".$url,
+        } catch (GuzzleException $e) {
+            Log::info("Failed to call given url: " . $url,
                 ["message" => $e->getMessage(), "trace" => $e->getTrace()]);
             throw new \RuntimeException("Sorry, your url is not available. Please try other link...", 422);
         }
@@ -51,30 +53,30 @@ class GoogleApiUrlChecker implements \App\Services\Interfaces\UrlChecker
     private function prepareApiUrl(string $endpoint): string
     {
         $apiKey = config(self::SAFE_BROWSING_API_KEY_CONFIG_PATH, null);
-        if (empty($apiKey)){
+        if (empty($apiKey)) {
             Log::error("Safe Browsing api key should not be empty!");
             throw new EmptyConfigException("server side error", 500);
         }
-        return self::BASE_URL.$endpoint."?key=".$apiKey;
+        return self::BASE_URL . $endpoint . "?key=" . $apiKey;
     }
 
     private function prepareRequestBody(string $urlToCheck): array
     {
         return [
             "json" => [
-            "client" => [
-                "clientId" =>  env('APP_NAME', 'Laravel'),
-                "clientVersion" => "1.5.2"
-            ],
-            "threatInfo" => [
-                "threatTypes" => ["MALWARE", "SOCIAL_ENGINEERING"],
-                "platformTypes" =>  ["WINDOWS", "LINUX"],
-                "threatEntryTypes" => ["URL"],
-                "threatEntries" => [
-                    ["url" => $urlToCheck]
+                "client" => [
+                    "clientId" => env('APP_NAME', 'Laravel'),
+                    "clientVersion" => "1.5.2"
+                ],
+                "threatInfo" => [
+                    "threatTypes" => ["MALWARE", "SOCIAL_ENGINEERING"],
+                    "platformTypes" => ["WINDOWS", "LINUX"],
+                    "threatEntryTypes" => ["URL"],
+                    "threatEntries" => [
+                        ["url" => $urlToCheck]
+                    ]
                 ]
             ]
-        ]
         ];
     }
 }
